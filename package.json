@@ -1,7 +1,7 @@
 {
   "name": "@octoblu/npm-dependents",
-  "bin": "node command.js",
-  "version": "2.0.0",
+  "bin": "./command.js",
+  "version": "2.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
