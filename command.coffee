@@ -4,6 +4,7 @@ fs       = require 'fs'
 _        = require 'lodash'
 
 NpmDependents = require './index.coffee'
+PACKAGE_JSON  = require './package.json'
 
 OPTIONS = [{
   names: ['help', 'h']
@@ -17,6 +18,10 @@ OPTIONS = [{
   names: ['list', 'l']
   type: 'bool'
   help: 'List all dependents'
+}, {
+  names: ['version', 'v']
+  type: 'bool'
+  help: 'Print the version'
 }]
 
 class Command
@@ -29,7 +34,8 @@ class Command
 
   getOpts: =>
     opts = @parser.parse @argv
-    {help, json, list} = opts
+    {help, json, list, version} = opts
+    @_printVersion() if version
     npmPackage = _.first opts._args
     npmPackage = @_getFromPackageJSON() unless npmPackage?
 
@@ -77,5 +83,9 @@ class Command
 
   _printJSON: (obj) =>
     console.log JSON.stringify(obj, null, 2)
+
+  _printVersion: =>
+    console.log "v#{PACKAGE_JSON.version}"
+    process.exit 0
 
 module.exports = Command
