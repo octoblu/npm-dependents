@@ -1,5 +1,6 @@
 colors   = require 'colors'
 dashdash = require 'dashdash'
+fs       = require 'fs'
 _        = require 'lodash'
 
 NpmDependents = require './index.coffee'
@@ -12,12 +13,10 @@ OPTIONS = [{
   names: ['json', 'j']
   type: 'bool'
   help: 'JSON output'
-  env: 'DB_SCRIPTS_NODE_NAME'
 }, {
   names: ['list', 'l']
   type: 'bool'
   help: 'List all dependents'
-  env: 'DB_SCRIPTS_MONGODB_URI'
 }]
 
 class Command
@@ -32,6 +31,7 @@ class Command
     opts = @parser.parse @argv
     {help, json, list} = opts
     npmPackage = _.first opts._args
+    npmPackage = @_getFromPackageJSON() unless npmPackage?
 
     unless npmPackage? && !help
       @_printHelp {help, npmPackage}
@@ -51,6 +51,10 @@ class Command
       return @_printJSON count: _.size(dependents) if json
       console.log "Number of dependents: #{_.size dependents}"
 
+  _getFromPackageJSON: =>
+    try
+      JSON.parse(fs.readFileSync('./package.json')).name
+
   _list: ({json, npmPackage}) =>
     npmDependents = new NpmDependents {npmPackage}
     npmDependents.list (error, dependents) =>
@@ -61,11 +65,14 @@ class Command
 
   _printHelp: ({help, npmPackage}) =>
     console.log "usage: npm-dependents [options] <npm-package>\n"
+    console.log "If <npm-package> is ommited, will try to auto-discover"
+    console.log "from a package.json in the current directory."
     console.log "options:\n"
-    console.log @parser.help includeEnv: true
+    console.log @parser.help()
     process.exit 0 if help
 
-    console.log colors.red '  <npm-package> is required' unless npmPackage?
+    unless npmPackage?
+      console.log colors.red '  <npm-package> is required or must be run from directory containing a package.json'
     process.exit 1
 
   _printJSON: (obj) =>
